@@ -1,0 +1,79 @@
+messaggio_b     // messaggio che riceve da b
+messaggio_c
+n               // numero di caratteri 
+num_char_b      // numero caratteri ricevuti da b
+num_char_c
+num_messaggi_b  // contatore dei messaggi
+num_messaggi_c
+pia_2_block
+fase
+
+
+// pia_1 collegata a B
+piaca_1
+piada_1
+
+// pia_2 collegata a C
+piaca_2
+piada_2
+
+
+MAIN() {
+    configurazione_pia()
+    abilitazione_interruzioni()
+    while(1)
+}
+
+configurazione_pia() {
+    pongo 0 sul registro di controllo di pia_1 e pia_2
+    metto tutti 0 sul registro dati
+    metto %00100101 sul registro di controllo di entrambi
+}
+
+
+ISR_B() {
+    salvataggio_contesto
+
+    // ricevi due volte
+    leggi su pia_1
+    count_char_b++
+    
+    if(count_char_b == n) {
+        count_char_b = 0
+        num_messaggi_b += 1
+
+        if(pia_block_2 == 1 && fase == 1) {
+          leggi su pia_2
+          count_char_c++
+        }
+    }
+
+    if(num_messaggi_b == 2)
+      fase = 1
+    
+    ripristino_registri
+
+    ritorno dalla ISR
+}
+
+ISR_C() {
+    salvataggio_contesto
+
+    if(num_messaggi_b > num_messaggi_c + 1) {
+        leggi su pia_2
+        count_char_c++
+
+        if(count_char_c == n) {
+        count_char_c = 0
+        num_messaggi_c += 1
+      }  
+    }
+    else 
+      pia_block_2 = 1
+
+    ripristino_registri
+
+    ritorno dalla ISR
+}
+
+

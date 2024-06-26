@@ -1,0 +1,123 @@
+messaggio_b     // messaggio che riceve da b
+messaggio_c
+start_up_b      // bit di start up
+start_up_c
+n               // numero di caratteri del messaggio(DS) 
+ric_dim_b       // flag di ottenumento della dimensione
+ric_dim_c
+pre_pia_1       // contatore del numero di precedenze
+pre_pia_2
+num_char_b      // numero caratteri ricevuti da b
+num_char_c
+lock
+ric_pia_1       // messaggio ricevuto completo sulla pia 1
+ric_pia_2
+pia_1_lock      // flag indicante che la pia è bloccata
+pia_2_lock
+
+// pia 1 collegata a B
+PIADA_1         // porto di ricezione verso B
+PIACA_1
+PIADB_1         // porto di trasmissione verso B
+PIACB_1
+
+PIADA_2         // porto di ricezione verso C
+PIACA_2
+PIADB_2         // porto di trasmissione verso C
+PIACB_2
+
+MAIN() {
+    configurazione_pia()
+    abilitazione_interruzioni()
+
+    while(1) {
+        if(ric_pia_1 == 1) {
+            salvo indirizzi porti e N
+            salvo N in un registro
+
+            while(cont > 0) {
+                lettura fittizia
+                pongo messaggio + contatore su PIADB_1
+                cont--
+            }
+            
+        }
+        else if (ric_pia_2 == 1) invia a C
+          // speculare
+    }
+} 
+
+configurazione_pia() {
+    pongo 0 su tutti i registri di controllo
+    pongo $00 su PIADA_1 e PIADA_2
+    pongo $FF su PIADB_1 e PIADB_2
+    pongo %00100101 ($25) su PIACA_1 e PIACA_2
+    pongo %00100100 ($24) su PIACB_1 e PIACB_2 
+}
+
+abilitazione_interruzioni() {
+    metto SR in registro DATI
+    pongo $D8FF sul registor dati
+    rimetto su SR
+}
+
+// recezione B
+INT_3 () {
+    salvataggio contesto
+    salvataggio registri della PIA
+    if(test_and_set(lock)) {
+        //  primo byte di start up
+        if(start_up_b == 0) {
+            if(pre_pia_1 > 4) {
+                pre_pia_1 = 0
+                pia_1_lock = 1
+                lock = 0
+                esci
+            }
+
+            leggi PIADA
+            start_up_b = 1
+            pre_pia_1++
+        }
+
+        //  ricevuto start_up, byte della dimensione 
+        if(start_up_b == 1 && ric_dim_b == 0) {
+            leggi PIADA
+            n = messaggio_ric
+            ric_dim_b = 1
+        }
+
+        //  ricevuto byte della dimensione, ottenumento messaggio
+        if(ric_dim_b == 1) {
+            salvo il carattere
+            num_char_b += 1
+
+            //  ricezione completa del messaggio
+            if(num_char_b == n) {
+                num_char_b = 0
+                start_up_b = 0
+                ric_dim_b == 0
+                ric_pia_1 = 1
+                lock = 0
+
+                //  lettura carattere appeso su c
+                if(pia_2_lock == 1) {
+                    pia_2_lock = 0
+                    start_up_c = 1
+                }
+            }                   
+        }
+    }
+
+    else {
+      pia_1_lock = 1
+    }
+
+    ripristino contesto
+    esci dalla ISR
+}
+
+// recezione C
+INT_4 () {
+    // speculare
+}

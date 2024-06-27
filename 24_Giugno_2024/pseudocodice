@@ -10,6 +10,8 @@ pre_pia_2
 num_char_b      // numero caratteri ricevuti da b
 num_char_c
 lock
+poss_b
+poss_c
 ric_pia_1       // messaggio ricevuto completo sulla pia 1
 ric_pia_2
 pia_1_lock      // flag indicante che la pia è bloccata
@@ -66,20 +68,22 @@ INT_3 () {
     salvataggio contesto
     salvataggio registri della PIA
     if(test_and_set(lock)) {
+        if(poss_c == 1)
+          goto unlock
+        
         //  primo byte di start up
         if(start_up_b == 0) {
             if(pre_pia_1 > 4) {
                 pre_pia_1 = 0
                 pia_1_lock = 1
-                lock = 0
-                esci
+                goto unlock
             }
 
             leggi PIADA
             start_up_b = 1
             poss_b = 1
-            lock = 0
             pre_pia_1++
+            goto unlock
         }
 
         //  ricevuto start_up, byte della dimensione 
@@ -87,7 +91,7 @@ INT_3 () {
             leggi PIADA
             n = messaggio_ric
             ric_dim_b = 1
-            lock = 0
+            goto unlock
         }
 
         //  ricevuto byte della dimensione, ottenumento messaggio
@@ -99,17 +103,17 @@ INT_3 () {
             if(num_char_b == n) {
                 num_char_b = 0
                 start_up_b = 0
-                ric_dim_b == 0
+                ric_dim_b = 0
                 ric_pia_1 = 1
-                poss_b = 0
                 
-
                 //  lettura carattere appeso su c
                 if(pia_2_lock == 1) {
+                    poss_c = 1
                     pia_2_lock = 0
                     start_up_c = 1
                 }
-                lock = 0
+
+                goto free
             }                   
         }
     }
@@ -117,6 +121,9 @@ INT_3 () {
     else {
       pia_1_lock = 1
     }
+
+    free
+    unlock
 
     ripristino contesto
     esci dalla ISR

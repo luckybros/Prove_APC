@@ -1,0 +1,106 @@
+messaggio_pia
+messaggio_usart
+M = 8
+N = 5
+cont_car_pia
+cont_car_usart
+cont_mes
+ric_pia     // indica che è stato ricevuto un messaggio
+ric_usart  
+lock_pia    // indica che la periferica è bloccata
+lock_usart
+int_pia     // ricevuta interruzione sulla pia
+int_usart
+ris
+
+PIADA
+PIACA
+USARTD
+USARTC
+
+MAIN() {
+    inizializzazione_periferiche()
+    abilitazione_interruzioni()
+    check_DSR()
+
+    while(1) {
+        if(ric_pia == 1 && ric_usart == 1) {
+            sottrai 2 a SP
+            PEA msg_1
+            PEA msg_2
+            STRCMP()
+            aggiungi 8 a SP 
+            ris = (SP)+
+            if(ris == 1) {
+                blocca la comunicazione
+            }
+            ric_pia = 0
+            ric_usart = 0
+            lock_pia = 0
+            lock_usart = 0
+            alzo DTR sul controllo della USART ($36)
+        }
+    }
+}
+
+inizializzazione_periferiche() {
+    // PIA
+    metto 0 sul registro di controllo  
+    metto $00 sul registro dati 
+    metto $25 sul registro di controllo 
+
+    // USART
+    metto $5D sul registro di controllo (per la direzione)
+    metto $36 sul registro di controllo (per il controllo)
+}
+
+abilitazione_interruzioni() {
+    metto SR su registro DATI
+    pongo $D8FF sul registro DATI
+    pongo contenuto registro dati sullo SR
+}
+
+check_DSR() {
+    pongo USARTC in un registro indirizzo 
+    porto il contenuto del registro in un registro dato
+    faccio una AND tra $80 e il registro DATO
+    se sono uguali torno a check_DSR
+}
+
+// ISR_PIA
+INT_3() {
+    salvataggio contesto
+
+    if(lock_pia == 0) {
+        porto PIADA registro indirizzo
+        porto messaggio su registro indirizzo
+        porto contatore caratteri
+        leggo su PIADA e porto contenuto sul messaggio
+        cont_car_pia++
+
+        if(cont_car_pia == N) {
+            count_car_pia = 0
+            porto contatore messaggi
+            count_mess++
+            lock_pia = 1
+            ric_pia = 1
+
+            if(count_mess == M) {
+                abbasso DTR sul registro di controllo della USART ($34)
+                lock_usart = 1
+                esci
+            }
+
+            if(int_usart = 1) {
+                alzo DTR sul registro di controllo della USART ($36)
+                leggi carattere appeso
+                int_usart = 0
+            }
+        }
+    }
+    else {
+        int_pia = 1
+    }
+
+    ripristino contesto
+}

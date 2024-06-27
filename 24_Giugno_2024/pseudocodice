@@ -77,6 +77,8 @@ INT_3 () {
 
             leggi PIADA
             start_up_b = 1
+            poss_b = 1
+            lock = 0
             pre_pia_1++
         }
 
@@ -85,6 +87,7 @@ INT_3 () {
             leggi PIADA
             n = messaggio_ric
             ric_dim_b = 1
+            lock = 0
         }
 
         //  ricevuto byte della dimensione, ottenumento messaggio
@@ -98,13 +101,15 @@ INT_3 () {
                 start_up_b = 0
                 ric_dim_b == 0
                 ric_pia_1 = 1
-                lock = 0
+                poss_b = 0
+                
 
                 //  lettura carattere appeso su c
                 if(pia_2_lock == 1) {
                     pia_2_lock = 0
                     start_up_c = 1
                 }
+                lock = 0
             }                   
         }
     }

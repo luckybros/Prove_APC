@@ -42,11 +42,12 @@ MAIN() {
             lettura fittizia su entrambi
             pongo s in entrambi i registri indirizzo
 
+            ric_pia_1 = 0
+            ric_pia_2 = 0
+            
             if(s <= 100) {
                 lock_pia_1 = 0
                 lock_pia_2 = 0
-                ric_pia_1 = 0
-                ric_pia_2 = 0
             }
         }
     }

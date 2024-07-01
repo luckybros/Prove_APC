@@ -1,0 +1,119 @@
+//  AREA DATI
+messaggio_1 // messaggio ricevuto da b
+messaggio_2 // messaggio ricevuto da c
+count_1     // contatore caratteri messaggio b
+count_2     // contatore caratteri messaggio c
+ric_pia_1   // flag indicante la ricezione completa del messaggio da b
+ric_pia_2
+lock_pia_1  // flag indicante il bloccaggio di una pia
+lock_pia_2
+int_pia_1   // flag indicante carattere appeso su una pia
+int_pia_2
+dim = 2
+
+PIADA_1
+PIACA_1
+PIADA_2
+PIACA_2
+USARTD
+USARTC
+
+//  AREA MAIN 
+MAIN() {
+    inizializzazione_periferiche()
+    abilitazione_interruzioni()
+    check_DSR()
+
+    while(1) {
+        if(pia_ric_1 == 1 && pia_ric_2 == 1) {
+            i = 0
+            while(i < dim) {
+                if(messaggio_1[i] != messaggio_2[i]) {
+                    vai a trasm_div
+                }
+            }
+
+            // trasm_uguali
+            pongo USARTD in registro indirizzo
+            pongo messaggio_1 in registro indirizzo
+            invio
+            vado a fine loop
+
+            // trasm_diversi
+            pongo USARTD in registro indirizzo
+            pongo messaggio_1 in registro indirizzo
+            invio
+            pongo messaggio_2 in registro indirizzo
+            invio
+
+            // fine loop
+            pia_ric_1 = 0
+            pia_ric_2 = 0
+            lock_pia_1 = 0
+            lock_pia_2 = 0
+
+            if(int_pia_1 = 1) {
+                pongo PIADA_1 in registro indirizzo
+                pongo count_b in registro dati
+                leggo contenuto PIADA_1
+                count_1++
+            }
+
+            if(int_pia_2 = 1) {
+                // speculare
+            }
+        }
+    }
+}
+
+inizializzazione_periferiche() {
+  pongo 0 sul registro PIACA_1
+  pongo $00 sul registro PIADA_1
+  pongo $25 sul registro PIACA_1    
+  pongo 0 sul registro PIACA_2
+  pongo $00 sul registro PIADA_2
+  pongo $25 sul registro PIACA_2
+  pongo $5D su USART_C
+  pongo $23 su USART_C 
+}
+
+abilitazione_interruzioni() {
+  pongo il contenuto di SR in un registro dati
+  faccio prodotto con maschera $D8FF nel registro dati
+  pongo il contenuto del registro dati in SR
+}
+
+check_DSR() {
+  while(prodotto maschera con $80 != 0)
+  torna
+}
+
+ISR_B() {
+    salvataggio contesto
+
+    if(lock_pia_1 == 0) {
+        pongo PIADA_1 in registro indirizzo
+        pongo messaggio_b in registro indirizzo
+        pongo count_b in registro dati
+        leggo contenuto PIADA_1
+        count_1++
+
+        if(count_1 == 2) {
+            count_1 = 0
+            ric_pia_1 = 1
+            lock_pia_1 = 1
+        }
+    }
+    else {
+        int_pia_1 = 1
+    }
+    ripristino contesto
+}
+
+ISR_C() {
+    // speculare
+}
+
+ISR_D() {
+    torna
+}

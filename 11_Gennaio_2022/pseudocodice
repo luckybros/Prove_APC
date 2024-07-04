@@ -1,0 +1,99 @@
+messaggio_b     // messaggio che si riceve da b
+N               // numero di caratteri
+M               // numero di messaggi
+count_char
+count_mess
+ric_pia         // flag che indica che il messaggio è stato ricevuto
+lock_pia        // flag che indica che la periferica è bloccata
+int_pia         // flag che indica che è stato ricevuto un carattere pendente
+ris_check       // risultato della checksum
+
+PIADA_1
+PIACA_1
+PIADB_2
+PIACB_2
+
+MAIN() {
+    inizializzazione_periferiche()
+    abilitazione_interruzioni()
+
+    while(1) {
+        if(ric_pia == 1) {
+            sottraggo 2 allo SP per il risultato
+            PEA messaggio_b
+            PEA N
+            CHECKSUM()
+            aggiungo 6 allo SP
+            ris_check = (SP)+
+
+            if(ris_check == 1) {
+                // terminare 
+                ric_pia = 0
+                vai a loop
+            }   
+
+            pongo PIADB_2, messaggio_b su registro indirizzo
+            pongo N in un registro dati
+            contatore = 0
+            
+            while(contatore < N) {
+                lettura fittizia
+                pongo messaggio_b[contatore] su registro indirizzo PIADA_B
+                contatore++
+            }
+
+            ric_pia = 0
+
+            if(int_pia == 1) {
+                pongo PIADA_1, messaggio_b su registro indirizzo
+                leggo 
+                int_pia = 0
+            }
+
+            lock_pia = 0
+            vai a loop
+        }
+    }
+}
+
+inizializzazione_periferiche() {
+    pongo 0 su PIACA_1
+    pongo $00 su PIADA_1
+    pongo $25 su PIACA_1
+    pongo 0 su PIACB_2
+    pongo $FF su PIADB_2
+    pongo $24 su PIACB_2
+}
+
+abilitazione_interruzioni() {
+    pongo lo SR su un registro dati
+    faccio ANDI con registro dati e $D8FF
+    pongo registro dati su SR
+}
+
+// ISR_B
+INT_B() {
+    salvataggio contesto
+    if(lock_pia == 0) {
+        pongo PIADA_1, messaggio_b su registri indirizzi
+        pongo count_char su registro dati
+        leggo
+        count_char++ 
+
+        if(count_char == N) {
+            count_char = 0
+            pongo count_mess su registro dati
+            count_mess++
+
+            if(count_mess =! M)
+                ric_pia = 1
+                
+            lock_pia = 1
+        }
+    }
+
+    else 
+        int_pia = 1
+
+    ripristino contesto
+}

@@ -1,0 +1,3 @@
+Un sistema `e composto da tre unit`a, A, B e C, tra loro collegate mediante due periferiche parallele che interconnettono A con B e A con C rispettivamente. Il sistema opera come segue:
+A riceve M messaggi da N caratteri da B, e calcola il valore di una funzione CHECKSUM, a cui va passato l’indirizzo di partenza del messaggio e la sua lunghezza. Se CHECKSUM da tutti valori alti allora A termina 
+la ricezione da B, altrimenti inoltro il messaggio a C.

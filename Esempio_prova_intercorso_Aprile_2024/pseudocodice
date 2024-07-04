@@ -1,0 +1,70 @@
+messaggio_pia
+messaggio_usart
+X // dimensione del messaggio ricevuto
+ric_dim_pia       // flag di ottenumento della dimensione
+ric_dim_usart
+pre_pia   // contatore delle precedenze
+pre_usart
+count_pia // contatore dei caratteri
+count_usart
+block_usart
+int_pia
+lock
+poss    // 0->libero
+
+PIADA
+PIACA
+USARTD
+USARTC
+
+MAIN() {
+    inizializzazione_periferiche()
+    abilitazione_interruzioni()
+    check_DSR()
+
+    while(1)
+}
+
+// PIA
+ISR_B() {
+    salvataggio contesto
+    if(test_and_set(lock)) {
+        if(poss == c) {
+            lock = 0
+            int_pia = 1
+            esci
+        }
+
+        if(ric_dim_pia == 0) {
+            if(pre_pia > 3) {
+                pre_pia = 0
+                int_pia = 1
+                lock = 0
+                esci
+            } 
+            poss = b
+            ric_dim_pia = 1
+            leggi e salva X 
+            pre_pia++
+            lock = 0
+            esci
+        }
+
+        leggi e salva carattere
+        count_pia++
+        if(count_pia == X) {
+            count_pia = 0
+            poss = 0
+            lock = 0
+            if(block_usart == 1) {
+                alzo DTR
+            }
+            esci
+        }
+    }
+    else {
+        int_pia = 1
+    }
+    ripristino contesto
+}
+

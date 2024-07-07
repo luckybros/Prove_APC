@@ -1,0 +1,119 @@
+messaggio_b
+messaggio_c
+X
+cont_pia    // contatore dei caratteri
+cont_usart
+pre_pia     // contatore delle precedenze
+pre_usart
+ric_dim_pia
+ric_dim_usart
+poss
+lock
+int_pia
+int_usart
+ric_msg_pia
+ric_msg_usart
+
+PIADA
+PIACA
+USARTD
+USARTC
+
+MAIN() {
+    inizializzazione_periferiche()
+    applico maschera $D8FF su SR    // abilitazione interruzioni
+    while($80 && USARTC == 0)   // check DSR
+
+    while(1)
+}
+
+inizializzazione_periferiche() {
+    pongo $0 su PIACA
+    pongo $00 su PIADA
+    pongo $25 su PIACA
+    pongo $5D su USARTC
+    pongo $36 su USARTC
+}
+
+// ISR PIA
+INT_3 () {
+    salvataggio contesto
+    if(test_and_set(lock)) {
+        if(poss == c) {
+            int_pia = 1
+            vai a unlock
+        }
+
+	    if(ric_msg_usart = 1) {
+            // se entra qui significa che è il secondo, hai gia il possesso della pia
+            leggi carattere
+            count_pia++
+            if(count_pia == X) {
+                // finito di ricevere, sbloccare le periferiche in modo che possano di nuovo ricevere un carattere X
+                count_pia = 0
+                ric_dim_usart = 0
+                ric_msg_usart = 0
+                if(int_usart == 1) {
+                    // questo carattere ricevuto sarà sicuramente X, quindi bisogna fare i controlli
+                    if(pre_usart > 3) {
+                        pre_usart = 0
+                        vai a free
+                    }
+                    ricevi X
+                    salva X
+                    ric_dim_usart = 1
+                    poss = c
+                    alzo DTR
+
+                    vai a unlock
+                }
+                vai a free
+            }
+            vai a unlock
+        }
+
+        if(ric_dim_pia == 0) {
+            // se entra qui è il primo a ricevere e riceve la dim
+            if(pre_pia > 3) {
+                pre_pia = 0
+                int_pia = 1
+                vai a unlock
+            }
+            ricevi X
+            salva X
+            ric_dim_pia = 1
+	        poss = b
+	        vai ad unlock
+        } 
+        
+        else{
+            // se entra qui è il primo e ha ricevuto la dimensione
+	        leggi carattere
+            count_pia++
+            if(count_pia == X) {
+                count_pia = 0
+                ric_msg_pia = 1
+                poss = c
+
+                if(int_usart == 1) {
+                    ricevi carattere 
+                    leggi carattere
+                    count_usart++
+                    alzo DTR
+                }
+                vai a unlock
+            }
+        }
+    }
+
+    else
+        int_pia = 1
+
+    // free
+    poss = 0
+    // unlock
+    lock = 0
+
+    ripristino contesto
+}
+

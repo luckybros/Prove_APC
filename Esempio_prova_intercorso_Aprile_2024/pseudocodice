@@ -34,7 +34,7 @@ ISR_B() {
             int_pia = 1
             esci
         }
-
+        
         if(ric_dim_pia == 0) {
             if(pre_pia > 3) {
                 pre_pia = 0
